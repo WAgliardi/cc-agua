@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Controle de Água</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <meta name="theme-color" content="#1D9E75" />
+  <meta name="description" content="Acompanhe seu consumo diário de água e o histórico semanal." />
+
+  <!-- iOS / Safari (Adicionar à Tela de Início) -->
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Água" />
+  <link rel="apple-touch-icon" href="./icon-192.png" />
+  <link rel="icon" type="image/png" href="./icon-192.png" />
+
+  <link rel="stylesheet" href="./assets/tabler/tabler-icons.min.css" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f4f6f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem 3rem;
+      user-select: none;
+    }
+
+    h1 { font-size: 20px; font-weight: 600; color: #1a2e1a; margin-bottom: 0.25rem; text-align: center; }
+    .subtitle { font-size: 13px; color: #6b7c6b; margin-bottom: 1.5rem; text-align: center; }
+    .wrap { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 1rem; }
+
+    .summary-card { background: #1D9E75; border-radius: 16px; padding: 1.25rem 1.5rem; color: white; }
+    .summary-row { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px; }
+    .summary-label { font-size: 13px; opacity: 0.85; }
+    .summary-value { font-size: 28px; font-weight: 700; }
+    .summary-goal { font-size: 14px; opacity: 0.75; }
+    .progress-track { height: 8px; background: rgba(255,255,255,0.3); border-radius: 99px; overflow: hidden; }
+    .progress-fill { height: 100%; background: white; border-radius: 99px; transition: width 0.35s ease; }
+
+    .card { background: white; border-radius: 16px; padding: 1rem 1.25rem; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .section-title { font-size: 11px; font-weight: 600; color: #6b7c6b; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px; }
+    .period-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .period-label { font-size: 15px; font-weight: 500; color: #1a2e1a; display: flex; align-items: center; gap: 8px; }
+    .period-count { font-size: 13px; color: #6b7c6b; }
+    .cups-grid { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .cup-btn {
+      width: 52px; height: 52px; border-radius: 12px;
+      border: 1.5px solid #dde8dd; background: #f4f6f0;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .cup-btn.filled { background: #E1F5EE; border-color: #1D9E75; }
+    .cup-btn .ti { font-size: 22px; color: #aabfaa; }
+    .cup-btn.filled .ti { color: #1D9E75; }
+
+    .chimarrao-row { display: flex; align-items: center; gap: 14px; }
+    .chimarrao-check {
+      width: 52px; height: 52px; border-radius: 12px;
+      border: 1.5px solid #dde8dd; background: #f4f6f0;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .chimarrao-check.done { background: #faeeda; border-color: #BA7517; }
+    .chimarrao-check .ti { font-size: 22px; color: #aabfaa; }
+    .chimarrao-check.done .ti { color: #BA7517; }
+    .chimarrao-text .label { font-size: 15px; font-weight: 500; color: #1a2e1a; }
+    .chimarrao-text .sub { font-size: 13px; color: #6b7c6b; margin-top: 3px; }
+
+    .congrats {
+      text-align: center; padding: 0.85rem 1rem;
+      background: #E1F5EE; border-radius: 12px;
+      font-size: 14px; font-weight: 500; color: #0F6E56; display: none;
+    }
+
+    .reset-btn {
+      background: none; border: 1.5px solid #dde8dd; border-radius: 10px;
+      padding: 0.6rem 1.25rem; font-size: 13px; color: #6b7c6b;
+      cursor: pointer; width: 100%; transition: background 0.15s;
+    }
+    .reset-btn:hover { background: #f4f6f0; }
+
+    .saved-badge {
+      text-align: center; font-size: 12px; color: #1D9E75;
+      opacity: 0; transition: opacity 0.4s;
+    }
+    .saved-badge.show { opacity: 1; }
+
+    .week-grid { display: flex; justify-content: space-between; gap: 6px; align-items: flex-end; }
+    .day-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .day-val { font-size: 10px; color: #9aa89a; height: 13px; }
+    .day-bar-track { width: 100%; max-width: 28px; height: 80px; background: #f0f3ee; border-radius: 6px; display: flex; align-items: flex-end; overflow: hidden; }
+    .day-bar-fill { width: 100%; background: #b7d9cb; border-radius: 6px 6px 0 0; transition: height 0.35s ease; }
+    .day-bar-fill.met { background: #1D9E75; }
+    .day-label { font-size: 11px; color: #6b7c6b; }
+    .day-col.today .day-label { color: #1D9E75; font-weight: 700; }
+    .week-summary { font-size: 12px; color: #6b7c6b; text-align: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+  <h1>💧 Controle de Água</h1>
+  <p class="subtitle" id="data-hoje"></p>
+
+  <div class="wrap">
+
+    <div class="summary-card">
+      <div class="summary-row">
+        <span class="summary-label">Total hoje</span>
+        <div>
+          <span class="summary-value" id="total-display">0,0</span>
+          <span class="summary-goal"> / 2,0 L</span>
+        </div>
+      </div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Manhã — meta 1 L</p>
+      <div class="period-header">
+        <span class="period-label">
+          <i class="ti ti-sun" style="color: #BA7517;"></i>
+          Copo de 250 ml
+        </span>
+        <span class="period-count" id="manha-count">0 / 4 copos</span>
+      </div>
+      <div class="cups-grid" id="manha-cups"></div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Tarde — meta 1 L</p>
+      <div class="period-header">
+        <span class="period-label">
+          <i class="ti ti-sun-wind" style="color: #1D9E75;"></i>
+          Copo de 250 ml
+        </span>
+        <span class="period-count" id="tarde-count">0 / 4 copos</span>
+      </div>
+      <div class="cups-grid" id="tarde-cups"></div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Chimarrão</p>
+      <div class="chimarrao-row">
+        <div class="chimarrao-check" id="chimarrao-check" onclick="toggleChimarrao()">
+          <i class="ti ti-leaf"></i>
+        </div>
+        <div class="chimarrao-text">
+          <div class="label">500 ml antes do chimarrão</div>
+          <div class="sub">Beba ao menos 500 ml antes de tomar</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <p class="section-title">Histórico semanal</p>
+      <div class="week-grid" id="week-grid"></div>
+      <p class="week-summary" id="week-summary"></p>
+    </div>
+
+    <div class="congrats" id="congrats">
+      🏆 Meta do dia batida! Ótimo trabalho!
+    </div>
+
+    <p class="saved-badge" id="saved-badge"><i class="ti ti-device-floppy"></i> Progresso salvo</p>
+
+    <button class="reset-btn" onclick="resetDay()">
+      <i class="ti ti-refresh"></i> Reiniciar o dia
+    </button>
+
+  </div>
+
+  <script>
+    const CUP = 250;
+    const GOAL = 2000;
+    const TODAY_KEY = 'agua_date';
+    const STATE_KEY = 'agua_state';
+    const HISTORY_KEY = 'agua_history';
+
+    // Data LOCAL (não UTC) — evita reset antecipado às 21h em UTC-3
+    function dateKey(d) {
+      return d.getFullYear() + '-' +
+             String(d.getMonth() + 1).padStart(2, '0') + '-' +
+             String(d.getDate()).padStart(2, '0');
+    }
+    function todayStr() { return dateKey(new Date()); }
+
+    function totalFromState(s) {
+      return (s.manha + s.tarde) * CUP + (s.chimarrao ? 500 : 0);
+    }
+
+    function loadHistory() {
+      try { return JSON.parse(localStorage.getItem(HISTORY_KEY)) || {}; }
+      catch { return {}; }
+    }
+    function saveHistory(h) {
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+    }
+
+    function loadState() {
+      const savedDate = localStorage.getItem(TODAY_KEY);
+      if (savedDate !== todayStr()) {
+        // arquiva o total do dia anterior antes de zerar
+        if (savedDate) {
+          try {
+            const prev = JSON.parse(localStorage.getItem(STATE_KEY));
+            if (prev) {
+              const h = loadHistory();
+              h[savedDate] = totalFromState(prev);
+              saveHistory(h);
+            }
+          } catch {}
+        }
+        localStorage.setItem(TODAY_KEY, todayStr());
+        localStorage.removeItem(STATE_KEY);
+        return { manha: 0, tarde: 0, chimarrao: false };
+      }
+      try {
+        return JSON.parse(localStorage.getItem(STATE_KEY)) || { manha: 0, tarde: 0, chimarrao: false };
+      } catch {
+        return { manha: 0, tarde: 0, chimarrao: false };
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(STATE_KEY, JSON.stringify(state));
+      const h = loadHistory();
+      h[todayStr()] = totalFromState(state);
+      saveHistory(h);
+      const badge = document.getElementById('saved-badge');
+      badge.classList.add('show');
+      setTimeout(() => badge.classList.remove('show'), 1500);
+    }
+
+    const state = loadState();
+
+    const hoje = new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+    document.getElementById('data-hoje').textContent = hoje.charAt(0).toUpperCase() + hoje.slice(1);
+
+    function buildCups(containerId, period) {
+      const wrap = document.getElementById(containerId);
+      wrap.innerHTML = '';
+      for (let i = 0; i < 4; i++) {
+        const btn = document.createElement('button');
+        btn.className = 'cup-btn' + (i < state[period] ? ' filled' : '');
+        btn.innerHTML = '<i class="ti ti-droplet"></i>';
+        btn.onclick = () => toggleCup(period, i + 1);
+        wrap.appendChild(btn);
+      }
+    }
+
+    function toggleCup(period, n) {
+      state[period] = state[period] === n ? n - 1 : n;
+      saveState();
+      refresh();
+    }
+
+    function toggleChimarrao() {
+      state.chimarrao = !state.chimarrao;
+      const el = document.getElementById('chimarrao-check');
+      el.classList.toggle('done', state.chimarrao);
+      el.innerHTML = state.chimarrao ? '<i class="ti ti-check"></i>' : '<i class="ti ti-leaf"></i>';
+      saveState();
+      refresh();
+    }
+
+    function resetDay() {
+      if (!confirm('Reiniciar o progresso de hoje?')) return;
+      state.manha = 0; state.tarde = 0; state.chimarrao = false;
+      const el = document.getElementById('chimarrao-check');
+      el.classList.remove('done');
+      el.innerHTML = '<i class="ti ti-leaf"></i>';
+      saveState();
+      refresh();
+    }
+
+    function startOfWeek(d) {
+      const x = new Date(d);
+      const day = (x.getDay() + 6) % 7; // 0 = segunda-feira
+      x.setDate(x.getDate() - day);
+      x.setHours(0, 0, 0, 0);
+      return x;
+    }
+
+    function renderWeek() {
+      const h = loadHistory();
+      h[todayStr()] = totalFromState(state); // garante hoje atualizado ao vivo
+      const labels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+      const start = startOfWeek(new Date());
+      const grid = document.getElementById('week-grid');
+      const todayKey = todayStr();
+      grid.innerHTML = '';
+      let weekTotal = 0, daysWithData = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const key = dateKey(d);
+        const val = h[key] || 0;
+        weekTotal += val;
+        if (val > 0) daysWithData++;
+        const pct = Math.min(100, Math.round(val / GOAL * 100));
+        const col = document.createElement('div');
+        col.className = 'day-col' + (key === todayKey ? ' today' : '');
+        col.innerHTML =
+          '<div class="day-val">' + (val ? (val / 1000).toFixed(1).replace('.', ',') : '') + '</div>' +
+          '<div class="day-bar-track"><div class="day-bar-fill' + (val >= GOAL ? ' met' : '') +
+            '" style="height:' + pct + '%"></div></div>' +
+          '<div class="day-label">' + labels[i] + '</div>';
+        grid.appendChild(col);
+      }
+      document.getElementById('week-summary').textContent =
+        'Semana: ' + (weekTotal / 1000).toFixed(1).replace('.', ',') + ' L' +
+        (daysWithData ? ' • média ' + (weekTotal / 1000 / daysWithData).toFixed(1).replace('.', ',') + ' L/dia' : '');
+    }
+
+    function refresh() {
+      buildCups('manha-cups', 'manha');
+      buildCups('tarde-cups', 'tarde');
+      document.getElementById('manha-count').textContent = state.manha + ' / 4 copos';
+      document.getElementById('tarde-count').textContent = state.tarde + ' / 4 copos';
+      const total = (state.manha + state.tarde) * CUP + (state.chimarrao ? 500 : 0);
+      document.getElementById('total-display').textContent = (total / 1000).toFixed(1).replace('.', ',');
+      document.getElementById('progress-fill').style.width = Math.min(100, Math.round(total / GOAL * 100)) + '%';
+      document.getElementById('congrats').style.display = total >= GOAL ? 'block' : 'none';
+      renderWeek();
+    }
+
+    buildCups('manha-cups', 'manha');
+    buildCups('tarde-cups', 'tarde');
+    refresh();
+
+    // Service worker — só registra quando servido via http/https (ignora no app Tauri)
+    if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js').catch(() => {});
+      });
+    }
+  </script>
+
+</body>
+</html>
