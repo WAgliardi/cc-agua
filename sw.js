@@ -1,5 +1,5 @@
 // Service worker do Controle de Água — cache do app shell para uso offline.
-const CACHE = 'agua-v1';
+const CACHE = 'agua-v2';
 const ASSETS = [
   './',
   './index.html',

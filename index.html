@@ -89,6 +89,59 @@
       cursor: pointer; width: 100%; transition: background 0.15s;
     }
     .reset-btn:hover { background: #f4f6f0; }
+    .reset-btn--danger { color: #b04a3a; border-color: #e8d0cb; }
+    .reset-btn--danger:hover { background: #fbeeeb; }
+
+    /* Botão de ajuda (?) no topo direito */
+    .help-btn {
+      position: fixed; top: 12px; right: 12px; z-index: 20;
+      width: 36px; height: 36px; border-radius: 50%;
+      border: none; background: #1D9E75; color: #fff;
+      font-size: 18px; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+      -webkit-tap-highlight-color: transparent;
+    }
+    .help-btn:hover { background: #178563; }
+
+    /* Modal de ajuda */
+    .help-overlay {
+      position: fixed; inset: 0; z-index: 30;
+      background: rgba(20,30,20,0.5);
+      display: none; align-items: flex-end; justify-content: center;
+      padding: 0;
+    }
+    .help-overlay.open { display: flex; }
+    .help-modal {
+      background: #fff; width: 100%; max-width: 460px;
+      border-radius: 18px 18px 0 0;
+      max-height: 88vh; overflow-y: auto;
+      padding: 1.25rem 1.25rem 2rem;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
+      animation: slideUp 0.25s ease;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .help-modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .help-modal-head h2 { font-size: 17px; color: #1a2e1a; }
+    .help-close {
+      background: #f4f6f0; border: none; border-radius: 50%;
+      width: 30px; height: 30px; cursor: pointer; color: #6b7c6b; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .help-close:hover { background: #e7ece2; }
+    .help-section { margin-bottom: 16px; }
+    .help-section h3 {
+      font-size: 14px; color: #1D9E75; margin-bottom: 5px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .help-section h3 .ti { font-size: 17px; }
+    .help-section p { font-size: 13.5px; color: #44524a; line-height: 1.5; }
+    .help-warn {
+      background: #fbeeeb; border: 1px solid #f0d8d2; border-radius: 12px;
+      padding: 12px 14px;
+    }
+    .help-warn h3 { color: #b04a3a; }
+    .help-warn p { color: #6e4a42; }
 
     .saved-badge {
       text-align: center; font-size: 12px; color: #1D9E75;
@@ -105,9 +158,118 @@
     .day-label { font-size: 11px; color: #6b7c6b; }
     .day-col.today .day-label { color: #1D9E75; font-weight: 700; }
     .week-summary { font-size: 12px; color: #6b7c6b; text-align: center; margin-top: 12px; }
+
+    /* Cabeçalho do card com botão de compartilhar */
+    .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .card-head .section-title { margin-bottom: 0; }
+    .share-btn {
+      background: none; border: 1.5px solid #dde8dd; border-radius: 8px;
+      width: 30px; height: 30px; flex-shrink: 0;
+      cursor: pointer; color: #6b7c6b;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .share-btn:hover { background: #f4f6f0; color: #1D9E75; border-color: #1D9E75; }
+    .share-btn .ti { font-size: 16px; }
+
+    /* Histórico mensal (calendário heatmap) */
+    .month-nav { display: flex; align-items: center; gap: 6px; }
+    .month-label { font-size: 12px; font-weight: 600; color: #1a2e1a; min-width: 96px; text-align: center; }
+    .month-arrow {
+      background: none; border: none; cursor: pointer; color: #6b7c6b;
+      width: 26px; height: 26px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s, color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .month-arrow:hover:not(:disabled) { background: #f4f6f0; color: #1D9E75; }
+    .month-arrow:disabled { opacity: 0.3; cursor: default; }
+    .month-arrow .ti { font-size: 18px; }
+    .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-dow { font-size: 10px; font-weight: 600; color: #9aa89a; text-align: center; padding-bottom: 2px; }
+    .cal-cell {
+      aspect-ratio: 1; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; color: #8a9a8a; background: #f0f3ee;
+    }
+    .cal-cell.empty { background: transparent; }
+    .cal-cell.met { color: #fff; }
+    .cal-cell.today { outline: 2px solid #BA7517; outline-offset: -2px; font-weight: 700; }
+    .month-summary { font-size: 12px; color: #6b7c6b; text-align: center; margin-top: 12px; }
   </style>
 </head>
 <body>
+
+  <button class="help-btn" onclick="openHelp()" aria-label="Ajuda" title="Ajuda">?</button>
+
+  <div class="help-overlay" id="help-overlay" onclick="if(event.target===this)closeHelp()">
+    <div class="help-modal" role="dialog" aria-modal="true" aria-label="Ajuda">
+      <div class="help-modal-head">
+        <h2>💧 Como funciona</h2>
+        <button class="help-close" onclick="closeHelp()" aria-label="Fechar">✕</button>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-glass-full"></i> O básico</h3>
+        <p>A meta é beber <b>2 litros de água por dia</b>, divididos em <b>Manhã (1 L)</b> e
+        <b>Tarde (1 L)</b>. Cada copo conta <b>250 ml</b>, então são 4 copos de manhã e 4 à tarde.
+        Toque num copo para marcar que bebeu; toque de novo para desmarcar.</p>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-leaf"></i> Chimarrão</h3>
+        <p>É um lembrete para <b>beber 500 ml de água antes do chimarrão</b>. Quando você marca,
+        esses 500 ml entram no total do dia.</p>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-clock"></i> Virada do dia</h3>
+        <p>À <b>meia-noite</b> o contador de hoje zera sozinho, e o total do dia anterior é
+        guardado automaticamente no histórico. Você não precisa fazer nada.</p>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-chart-bar"></i> Históricos e médias</h3>
+        <p>O <b>histórico semanal</b> mostra de segunda a domingo. O <b>histórico mensal</b> é um
+        calendário: quanto mais escura a cor do dia, mais perto da meta você chegou. Use as setas
+        <b>‹ ›</b> para ver meses anteriores — cada mês fica salvo com seu ano, nada é misturado.
+        A <b>média</b> é o total dividido pelos dias que já passaram no período (não só os dias em
+        que você bebeu água).</p>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-share"></i> Compartilhar</h3>
+        <p>O botãozinho de compartilhar no canto de cada histórico gera um <b>resumo em texto</b>
+        para enviar por WhatsApp, etc. Se o compartilhamento não abrir, o resumo é copiado para
+        você colar onde quiser.</p>
+      </div>
+
+      <div class="help-section help-warn">
+        <h3><i class="ti ti-alert-triangle"></i> Importante: onde ficam seus dados</h3>
+        <p>Tudo (consumo de hoje e todo o histórico) fica salvo <b>apenas neste navegador, neste
+        aparelho</b> — não vai para nenhum servidor ou nuvem. Por isso:</p>
+        <p style="margin-top:8px">• Se você <b>limpar os dados/cache do navegador</b>, o histórico
+        da semana e do mês <b>será perdido</b> e não há como recuperar.<br>
+        • Em <b>aba anônima</b> ou em <b>outro celular/computador</b>, o histórico não aparece —
+        cada navegador tem o seu.<br>
+        • Trocar de navegador (ex.: do Chrome para o Safari) também começa do zero.</p>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-trash"></i> Limpar histórico antigo</h3>
+        <p>Esse botão apaga só os registros <b>mais velhos</b>, mantendo a semana atual e o mês de
+        agora. Serve para enxugar dados antigos. Ele <b>pede confirmação</b> antes, e a ação não
+        pode ser desfeita.</p>
+      </div>
+
+      <div class="help-section">
+        <h3><i class="ti ti-device-mobile"></i> Usar como aplicativo</h3>
+        <p>No celular, use a opção <b>"Adicionar à tela de início"</b> do navegador para abrir o app
+        como se fosse um aplicativo, inclusive <b>sem internet</b>.</p>
+      </div>
+    </div>
+  </div>
 
   <h1>💧 Controle de Água</h1>
   <p class="subtitle" id="data-hoje"></p>
@@ -165,9 +327,34 @@
     </div>
 
     <div class="card">
-      <p class="section-title">Histórico semanal</p>
+      <div class="card-head">
+        <p class="section-title">Histórico semanal</p>
+        <button class="share-btn" id="share-week" onclick="shareWeek()" title="Compartilhar semana" aria-label="Compartilhar histórico semanal">
+          <i class="ti ti-share"></i>
+        </button>
+      </div>
       <div class="week-grid" id="week-grid"></div>
       <p class="week-summary" id="week-summary"></p>
+    </div>
+
+    <div class="card">
+      <div class="card-head">
+        <p class="section-title">Histórico mensal</p>
+        <button class="share-btn" id="share-month" onclick="shareMonth()" title="Compartilhar mês" aria-label="Compartilhar histórico mensal">
+          <i class="ti ti-share"></i>
+        </button>
+      </div>
+      <div class="month-nav" style="justify-content: center; margin-bottom: 12px;">
+        <button class="month-arrow" id="month-prev" onclick="changeMonth(-1)" aria-label="Mês anterior">
+          <i class="ti ti-chevron-left"></i>
+        </button>
+        <span class="month-label" id="month-label"></span>
+        <button class="month-arrow" id="month-next" onclick="changeMonth(1)" aria-label="Próximo mês">
+          <i class="ti ti-chevron-right"></i>
+        </button>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+      <p class="month-summary" id="month-summary"></p>
     </div>
 
     <div class="congrats" id="congrats">
@@ -180,11 +367,16 @@
       <i class="ti ti-refresh"></i> Reiniciar o dia
     </button>
 
+    <button class="reset-btn reset-btn--danger" onclick="clearOldHistory()">
+      <i class="ti ti-trash"></i> Limpar histórico antigo
+    </button>
+
   </div>
 
   <script>
     const CUP = 250;
     const GOAL = 2000;
+    let monthOffset = 0; // 0 = mês atual; negativo = meses anteriores
     const TODAY_KEY = 'agua_date';
     const STATE_KEY = 'agua_state';
     const HISTORY_KEY = 'agua_history';
@@ -294,9 +486,15 @@
       return x;
     }
 
-    function renderWeek() {
+    // Histórico com o dia de hoje sempre atualizado ao vivo
+    function liveHistory() {
       const h = loadHistory();
-      h[todayStr()] = totalFromState(state); // garante hoje atualizado ao vivo
+      h[todayStr()] = totalFromState(state);
+      return h;
+    }
+
+    function renderWeek() {
+      const h = liveHistory();
       const labels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
       const start = startOfWeek(new Date());
       const grid = document.getElementById('week-grid');
@@ -320,9 +518,195 @@
           '<div class="day-label">' + labels[i] + '</div>';
         grid.appendChild(col);
       }
+      // Média por dia decorrido da semana (Seg até hoje), não só dias com registro
+      const daysElapsed = (new Date().getDay() + 6) % 7 + 1;
       document.getElementById('week-summary').textContent =
         'Semana: ' + (weekTotal / 1000).toFixed(1).replace('.', ',') + ' L' +
-        (daysWithData ? ' • média ' + (weekTotal / 1000 / daysWithData).toFixed(1).replace('.', ',') + ' L/dia' : '');
+        ' • média ' + (weekTotal / 1000 / daysElapsed).toFixed(1).replace('.', ',') + ' L/dia';
+    }
+
+    const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+
+    // Mês exibido (ano/mês) a partir do offset relativo ao mês atual
+    function shownMonth() {
+      const now = new Date();
+      return new Date(now.getFullYear(), now.getMonth() + monthOffset, 1);
+    }
+
+    // Cor da célula conforme fração da meta atingida (heatmap verde)
+    function cellStyle(val) {
+      if (!val) return { bg: '#f0f3ee', met: false };
+      const pct = val / GOAL;
+      if (pct >= 1)   return { bg: '#1D9E75', met: true };
+      if (pct >= 0.75) return { bg: '#5CBE9A', met: true };
+      if (pct >= 0.5) return { bg: '#9AD7C2', met: false };
+      if (pct >= 0.25) return { bg: '#C7E8DC', met: false };
+      return { bg: '#E1F5EE', met: false };
+    }
+
+    function monthStats(year, month) {
+      const h = liveHistory();
+      const days = new Date(year, month + 1, 0).getDate();
+      const now = new Date();
+      // Dias decorridos: até hoje se for o mês atual; mês inteiro se já passou
+      const isCurrent = year === now.getFullYear() && month === now.getMonth();
+      const daysElapsed = isCurrent ? now.getDate() : days;
+      let total = 0, daysWithData = 0, daysMet = 0;
+      for (let d = 1; d <= days; d++) {
+        const val = h[dateKey(new Date(year, month, d))] || 0;
+        if (val > 0) { total += val; daysWithData++; }
+        if (val >= GOAL) daysMet++;
+      }
+      return { total, daysWithData, daysMet, days, daysElapsed };
+    }
+
+    function renderMonth() {
+      const ref = shownMonth();
+      const year = ref.getFullYear(), month = ref.getMonth();
+      document.getElementById('month-label').textContent = MONTH_NAMES[month] + ' ' + year;
+      // Desativa "próximo" quando já estamos no mês atual
+      document.getElementById('month-next').disabled = monthOffset >= 0;
+
+      const h = liveHistory();
+      const todayKey = todayStr();
+      const grid = document.getElementById('cal-grid');
+      grid.innerHTML = '';
+
+      ['S', 'T', 'Q', 'Q', 'S', 'S', 'D'].forEach(d => {
+        const el = document.createElement('div');
+        el.className = 'cal-dow';
+        el.textContent = d;
+        grid.appendChild(el);
+      });
+
+      const lead = (new Date(year, month, 1).getDay() + 6) % 7; // 0 = segunda
+      for (let i = 0; i < lead; i++) {
+        const el = document.createElement('div');
+        el.className = 'cal-cell empty';
+        grid.appendChild(el);
+      }
+
+      const days = new Date(year, month + 1, 0).getDate();
+      for (let d = 1; d <= days; d++) {
+        const key = dateKey(new Date(year, month, d));
+        const val = h[key] || 0;
+        const st = cellStyle(val);
+        const el = document.createElement('div');
+        el.className = 'cal-cell' + (st.met ? ' met' : '') + (key === todayKey ? ' today' : '');
+        el.style.background = st.bg;
+        el.textContent = d;
+        el.title = val ? (val / 1000).toFixed(1).replace('.', ',') + ' L' : 'Sem registro';
+        grid.appendChild(el);
+      }
+
+      const s = monthStats(year, month);
+      document.getElementById('month-summary').textContent = s.daysWithData
+        ? 'Total: ' + (s.total / 1000).toFixed(1).replace('.', ',') + ' L • média ' +
+          (s.total / 1000 / s.daysElapsed).toFixed(1).replace('.', ',') + ' L/dia • ' +
+          s.daysMet + ' dia' + (s.daysMet === 1 ? '' : 's') + ' na meta'
+        : 'Sem registros neste mês.';
+    }
+
+    // Remove registros anteriores ao início da semana atual e do mês corrente
+    // (mantém o que está visível nos dois históricos). Pede confirmação.
+    function clearOldHistory() {
+      const now = new Date();
+      const weekStart = startOfWeek(now);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+      const cutoff = dateKey(weekStart < monthStart ? weekStart : monthStart);
+
+      const h = loadHistory();
+      const oldKeys = Object.keys(h).filter(k => k < cutoff);
+      if (oldKeys.length === 0) {
+        alert('Não há histórico antigo para limpar.');
+        return;
+      }
+      const fmt = cutoff.split('-').reverse().join('/');
+      if (!confirm('Apagar ' + oldKeys.length + ' dia' + (oldKeys.length === 1 ? '' : 's') +
+          ' de histórico anterior(es) a ' + fmt + '?\n\n' +
+          'A semana atual e o mês corrente serão mantidos. Esta ação não pode ser desfeita.')) return;
+
+      oldKeys.forEach(k => delete h[k]);
+      saveHistory(h);
+      monthOffset = 0;
+      refresh();
+      flashSaved(oldKeys.length + ' dia' + (oldKeys.length === 1 ? '' : 's') + ' removido' + (oldKeys.length === 1 ? '' : 's'));
+    }
+
+    function openHelp() { document.getElementById('help-overlay').classList.add('open'); }
+    function closeHelp() { document.getElementById('help-overlay').classList.remove('open'); }
+    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') closeHelp(); });
+
+    function changeMonth(delta) {
+      if (delta > 0 && monthOffset >= 0) return; // não avança além do mês atual
+      monthOffset += delta;
+      if (monthOffset > 0) monthOffset = 0;
+      renderMonth();
+    }
+
+    // Compartilhamento: Web Share API → área de transferência → prompt (offline/file://)
+    async function shareText(text) {
+      try {
+        if (navigator.share) { await navigator.share({ text }); return; }
+      } catch (e) {
+        if (e && e.name === 'AbortError') return; // usuário cancelou
+      }
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(text);
+          flashSaved('Copiado para a área de transferência');
+          return;
+        }
+      } catch {}
+      window.prompt('Copie o texto abaixo:', text);
+    }
+
+    function flashSaved(msg) {
+      const badge = document.getElementById('saved-badge');
+      const original = badge.innerHTML;
+      badge.innerHTML = '<i class="ti ti-check"></i> ' + msg;
+      badge.classList.add('show');
+      setTimeout(() => {
+        badge.classList.remove('show');
+        setTimeout(() => { badge.innerHTML = original; }, 400);
+      }, 1800);
+    }
+
+    function shareWeek() {
+      const h = liveHistory();
+      const labels = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+      const start = startOfWeek(new Date());
+      const fmt = d => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      const end = new Date(start); end.setDate(start.getDate() + 6);
+      let lines = ['💧 Consumo de água — semana de ' + fmt(start) + ' a ' + fmt(end)];
+      let total = 0;
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(start); d.setDate(start.getDate() + i);
+        const val = h[dateKey(d)] || 0;
+        total += val;
+        lines.push(labels[i] + ': ' + (val / 1000).toFixed(1).replace('.', ',') + ' L' + (val >= GOAL ? ' ✅' : ''));
+      }
+      const daysElapsed = (new Date().getDay() + 6) % 7 + 1;
+      lines.push('');
+      lines.push('Total: ' + (total / 1000).toFixed(1).replace('.', ',') + ' L' +
+        ' • média ' + (total / 1000 / daysElapsed).toFixed(1).replace('.', ',') + ' L/dia');
+      shareText(lines.join('\n'));
+    }
+
+    function shareMonth() {
+      const ref = shownMonth();
+      const year = ref.getFullYear(), month = ref.getMonth();
+      const s = monthStats(year, month);
+      let text = '💧 Consumo de água — ' + MONTH_NAMES[month] + ' ' + year + '\n';
+      if (s.daysWithData) {
+        text += 'Total: ' + (s.total / 1000).toFixed(1).replace('.', ',') + ' L\n' +
+                'Média: ' + (s.total / 1000 / s.daysElapsed).toFixed(1).replace('.', ',') + ' L/dia\n' +
+                'Dias na meta: ' + s.daysMet + ' de ' + s.daysElapsed + ' dias';
+      } else {
+        text += 'Sem registros neste mês.';
+      }
+      shareText(text);
     }
 
     function refresh() {
@@ -335,6 +719,7 @@
       document.getElementById('progress-fill').style.width = Math.min(100, Math.round(total / GOAL * 100)) + '%';
       document.getElementById('congrats').style.display = total >= GOAL ? 'block' : 'none';
       renderWeek();
+      renderMonth();
     }
 
     buildCups('manha-cups', 'manha');
