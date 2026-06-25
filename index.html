@@ -109,9 +109,6 @@
       position: fixed; inset: 0; z-index: 30;
       background: rgba(20,30,20,0.5);
       display: none; align-items: flex-end; justify-content: center;
-      /* overlay rola quando o conteúdo é mais alto que a tela (evita corte no topo) */
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
     }
     .help-overlay.open { display: flex; }
     .help-modal {
@@ -120,6 +117,12 @@
       padding: 1.25rem 1.25rem 2rem;
       box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
       animation: slideUp 0.25s ease;
+      /* o próprio modal rola quando é mais alto que a tela: evita que o topo
+         (cabeçalho "Ajuda") fique cortado e inacessível no Safari iOS, onde um
+         filho flex alinhado em flex-end estoura acima da origem da rolagem. */
+      max-height: 100%;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
     }
     @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 
@@ -128,7 +131,6 @@
       .help-overlay { align-items: center; padding: 24px 16px; }
       .help-modal {
         border-radius: 18px;
-        margin: auto;
         animation: fadeIn 0.2s ease;
       }
     }
